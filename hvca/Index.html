@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>CoolTrack Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- ============================================================
+       DESIGN TOKENS
+  ============================================================ -->
+  <style>
+    :root {
+      /* Colors */
+      --bg:           #f0f2f5;
+      --white:        #ffffff;
+      --surface:      #f8f9fb;
+      --border:       #e2e6ed;
+      --border-strong:#d0d7e3;
+
+      --blue:         #1a56e8;
+      --blue-active:  #3b6ff0;
+      --blue-tint:    #e8effe;
+
+      --green:        #0fb77a;
+      --green-tint:   #e6f9f2;
+
+      --orange:       #f5820d;
+      --orange-tint:  #fff4e6;
+
+      --red:          #e8294a;
+      --red-tint:     #fdeef1;
+
+      --text:         #0f172a;
+      --text-muted:   #334155;
+      --muted:        #64748b;
+      --muted-light:  #94a3b8;
+
+      /* Typography */
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body:    'Outfit', sans-serif;
+      --font-mono:    'JetBrains Mono', monospace;
+
+      /* Spacing & Shape */
+      --radius:       14px;
+      --radius-sm:    10px;
+      --shadow:       0 2px 12px rgba(0, 0, 0, .08);
+      --shadow-lg:    0 8px 32px rgba(0, 0, 0, .12);
+    }
+  </style>
+
+  <!-- ============================================================
+       RESET & BASE
+  ============================================================ -->
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      min-height: 100vh;
+    }
+
+    button { font-family: inherit; }
+    textarea { resize: vertical; }
+  </style>
+
+  <!-- ============================================================
+       LAYOUT
+  ============================================================ -->
+  <style>
+    #app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--bg);
+    }
+
+    @media (min-width: 480px) {
+      #app { box-shadow: 0 0 40px rgba(0, 0, 0, .15); }
+    }
+
+    main {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    /* View transitions */
+    .view { display: none; }
+    .view.active {
+      display: block;
+      animation: fade-up .25s ease;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  <!-- ============================================================
+       HEADER
+  ============================================================ -->
+  <style>
+    .app-header {
+      background: var(--blue);
+      padding: 20px 20px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .app-header__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .app-logo {
+      font-family: var(--font-display);
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+    .app-logo__sub {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(255, 255, 255, .5);
+      letter-spacing: 0;
+    }
+
+    .app-header__date {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: rgba(255, 255, 255, .6);
+    }
+
+    .header-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat-pill {
+      background: rgba(255, 255, 255, .12);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-pill__value {
+      font-family: var(--font-display);
+      font-size: 26px;
+      color: #fff;
+      line-height: 1;
+    }
+    .stat-pill__label {
+      font-size: 10px;
+      color: rgba(255, 255, 255, .65);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+  </style>
+
+  <!-- ============================================================
+       BOTTOM NAV
+  ============================================================ -->
+  <style>
+    .app-nav {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 49;
+    }
+
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 4px 8px;
+      gap: 4px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--muted-light);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      transition: color .2s;
+      position: relative;
+    }
+
+    .nav-btn__icon {
+      font-size: 20px;
+      transition: transform .2s;
+    }
+    .nav-btn:hover .nav-btn__icon { transform: translateY(-2px); }
+
+    .nav-btn.is-active { color: var(--blue); }
+    .nav-btn.is-active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: var(--blue);
+      border-radius: 2px;
+    }
+
+    .nav-btn__badge {
+      display: none;
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 18px);
+      width: 16px;
+      height: 16px;
+      background: var(--red);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-btn__badge.is-visible { display: flex; }
+  </style>
+
+  <!-- ============================================================
+       TYPOGRAPHY HELPERS
+  ============================================================ -->
+  <style>
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title--sm { font-size: 17px; }
+
+    .page-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .page-toolbar__actions { display: flex; gap: 8px; }
+  </style>
+
+  <!-- ============================================================
+       CARD
+  ============================================================ -->
+  <style>
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+    }
+  </style>
+
+  <!-- ============================================================
+       EQUIPMENT CARD
+  ============================================================ -->
+  <style>
+    .equip-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      border-left: 4px solid var(--border-strong);
+    }
+    .equip-card:active { transform: scale(.98); }
+
+    .equip-card--ok     { border-left-color: var(--green); }
+    .equip-card--warn   { border-left-color: var(--orange); }
+    .equip-card--danger { border-left-color: var(--red); }
+
+    .equip-card__icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .equip-card--ok     .equip-card__icon { background: var(--green-tint); }
+    .equip-card--warn   .equip-card__icon { background: var(--orange-tint); }
+    .equip-card--danger .equip-card__icon { background: var(--red-tint); }
+
+    .equip-card__body  { flex: 1; min-width: 0; }
+    .equip-card__name  { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .equip-card__local { font-size: 12px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
+    .equip-card__tag   { font-size: 11px; color: var(--blue); font-weight: 600; margin-top: 2px; }
+    .equip-card__last  { font-size: 11px; color: var(--muted-light); margin-top: 2px; }
+  </style>
+
+  <!-- ============================================================
+       BADGE
+  ============================================================ -->
+  <style>
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      flex-shrink: 0;
+    }
+    .badge--ok     { background: var(--green-tint);  color: var(--green); }
+    .badge--warn   { background: var(--orange-tint); color: var(--orange); }
+    .badge--danger { background: var(--red-tint);    color: var(--red); }
+  </style>
+
+  <!-- ============================================================
+       FORM
+  ============================================================ -->
+  <style>
+    .form-group { margin-bottom: 14px; }
+    .form-row    { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+    }
+    .form-control:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26, 86, 232, .1);
+    }
+    textarea.form-control { min-height: 80px; resize: vertical; }
+    select.form-control option { background: #fff; }
+  </style>
+
+  <!-- ============================================================
+       PHOTO UPLOAD
+  ============================================================ -->
+  <style>
+    .photo-drop {
+      border: 2px dashed var(--border-strong);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .photo-drop:hover {
+      border-color: var(--blue);
+      background: var(--blue-tint);
+    }
+    .photo-drop input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .photo-drop__icon { font-size: 28px; margin-bottom: 6px; }
+    .photo-drop__text { font-size: 13px; color: var(--muted); font-weight: 500; }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .photo-thumb {
+      position: relative;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      aspect-ratio: 1;
+      background: var(--border);
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-thumb__remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      background: rgba(0, 0, 0, .6);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+
+  <!-- ============================================================
+       BUTTONS
+  ============================================================ -->
+  <style>
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      padding: 13px 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 14px;
+      transition: all .15s;
+    }
+    .btn--primary { background: var(--blue); color: #fff; }
+    .btn--primary:active { background: var(--blue-active); transform: scale(.98); }
+
+    .btn--outline {
+      background: transparent;
+      color: var(--blue);
+      border: 2px solid var(--blue);
+    }
+    .btn--danger {
+      background: var(--red-tint);
+      color: var(--red);
+    }
+    .btn--sm {
+      width: auto;
+      padding: 8px 14px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn-group .btn { flex: 1; }
+  </style>
+
+  <!-- ============================================================
+       TIMELINE
+  ============================================================ -->
+  <style>
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline__item {
+      position: relative;
+      margin-bottom: 14px;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .timeline__item-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .timeline__item-body { flex: 1; min-width: 0; }
+
+    .timeline__dot {
+      position: absolute;
+      left: -22px;
+      top: 18px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--blue);
+    }
+    .timeline__dot--warn   { background: var(--orange); box-shadow: 0 0 0 2px var(--orange); }
+    .timeline__dot--danger { background: var(--red);    box-shadow: 0 0 0 2px var(--red); }
+
+    .timeline__date  { font-family: var(--font-mono); font-size: 10px; color: var(--muted-light); margin-bottom: 4px; }
+    .timeline__title { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+    .timeline__equip { font-size: 12px; color: var(--blue); font-weight: 600; margin-bottom: 6px; }
+    .timeline__obs   { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .timeline__parts { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    .timeline__photos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .timeline__photo  {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid var(--border);
+    }
+
+    .timeline__next {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--orange-tint);
+      color: var(--orange);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+
+    .timeline__delete {
+      background: none;
+      border: none;
+      color: var(--muted-light);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+  </style>
+
+  <!-- ============================================================
+       ALERT CARD
+  ============================================================ -->
+  <style>
+    .alert-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 10px;
+      border-left: 4px solid var(--orange);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      cursor: pointer;
+    }
+    .alert-card--critical { border-left-color: var(--red); }
+
+    .alert-card__icon  { font-size: 22px; flex-shrink: 0; }
+    .alert-card__title { font-weight: 700; font-size: 14px; }
+    .alert-card__sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .alert-card__equip {
+      font-size: 11px;
+      color: var(--blue);
+      font-weight: 600;
+      margin-top: 4px;
+      font-family: var(--font-mono);
+    }
+  </style>
+
+  <!-- ============================================================
+       MODAL (bottom sheet)
+  ============================================================ -->
+  <style>
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(4px);
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.is-open {
+      display: flex;
+      animation: fade-in .2s;
+    }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: var(--white);
+      border-radius: 20px 20px 0 0;
+      padding: 24px 20px 32px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slide-up .25s ease;
+    }
+    @keyframes slide-up {
+      from { transform: translateY(40px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .modal__handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    .modal__title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 1px;
+      margin-bottom: 18px;
+    }
+  </style>
+
+  <!-- ============================================================
+       SEARCH BAR
+  ============================================================ -->
+  <style>
+    .search-bar {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .search-bar__input { padding-left: 38px !important; }
+    .search-bar__icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted-light);
+      font-size: 16px;
+      pointer-events: none;
+    }
+  </style>
+
+  <!-- ============================================================
+       DETAIL INFO ROWS (modal)
+  ============================================================ -->
+  <style>
+    .info-list { margin-bottom: 14px; }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row__label { color: var(--muted); font-size: 12px; }
+    .info-row__value { font-weight: 600; text-align: right; max-width: 60%; }
+  </style>
+
+  <!-- ============================================================
+       EMPTY STATE
+  ============================================================ -->
+  <style>
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .empty-state__icon { font-size: 36px; margin-bottom: 10px; opacity: .5; }
+    .empty-state__title { font-weight: 700; font-size: 15px; color: var(--muted); }
+    .empty-state__sub   { font-size: 12px; color: var(--muted-light); margin-top: 4px; }
+  </style>
+
+  <!-- ============================================================
+       LIGHTBOX
+  ============================================================ -->
+  <style>
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0, 0, 0, .9);
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox.is-open { display: flex; }
+    .lightbox__img { max-width: 95vw; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+    .lightbox__close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 28px;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+  </style>
+
+  <!-- ============================================================
+       REPORT VIEW
+  ============================================================ -->
+  <style>
+    .report-header {
+      font-family: var(--font-display);
+      font-size: 20px;
+      letter-spacing: 1px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .report-meta {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+    .report-record { page-break-inside: avoid; }
+    .report-record__obs {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .report-record__photos { margin-top: 10px; }
+    .report-record__photos-title {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .report-record__photos-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+    .report-record__photo {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+    .report-next {
+      display: inline-flex;
+      background: var(--orange-tint);
+      color: var(--orange);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+  </style>
+
+  <!-- ============================================================
+       PRINT
+  ============================================================ -->
+  <style>
+    @media print {
+      .app-header,
+      .app-nav,
+      .page-toolbar,
+      .btn-group,
+      .modal-overlay { display: none !important; }
+
+      body { background: #fff; }
+      #app { max-width: 100%; box-shadow: none; }
+      main { padding: 0; }
+
+      .view { display: none !important; }
+      #view-relatorio { display: block !important; }
+    }
+  </style>
+</head>
+
+<!-- ============================================================
+     HTML
+============================================================ -->
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="app-header__top">
+      <div class="app-logo">CoolTrack <span class="app-logo__sub">Pro</span></div>
+      <div class="app-header__date" id="hdr-date"></div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-pill">
+        <div class="stat-pill__value" id="hst-total">0</div>
+        <div class="stat-pill__label">Equipamentos</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill__value" id="hst-mes">0</div>
+        <div class="stat-pill__label">Este mês</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill__value" id="hst-alert">0</div>
+        <div class="stat-pill__label">Alertas</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Bottom Nav -->
+  <nav class="app-nav">
+    <button class="nav-btn is-active" id="nav-inicio"       onclick="goView('inicio')">
+      <span class="nav-btn__icon">🏠</span>Início
+    </button>
+    <button class="nav-btn" id="nav-equipamentos"           onclick="goView('equipamentos')">
+      <span class="nav-btn__icon">❄️</span>Equip.
+    </button>
+    <button class="nav-btn" id="nav-registro"               onclick="goView('registro')">
+      <span class="nav-btn__icon">➕</span>Registrar
+    </button>
+    <button class="nav-btn" id="nav-historico"              onclick="goView('historico')">
+      <span class="nav-btn__icon">📋</span>Histórico
+    </button>
+    <button class="nav-btn" id="nav-alertas"                onclick="goView('alertas')">
+      <span class="nav-btn__icon">🔔</span>Alertas
+      <span class="nav-btn__badge" id="alerta-badge">0</span>
+    </button>
+  </nav>
+
+  <main>
+
+    <!-- ── INÍCIO ── -->
+    <div class="view active" id="view-inicio">
+      <div class="section-title">👋 Bom dia!</div>
+      <div id="dash-alertas-mini"></div>
+
+      <div class="section-title section-title--sm">Últimas manutenções</div>
+      <div id="dash-recentes"></div>
+
+      <div class="section-title section-title--sm">Equipamentos críticos</div>
+      <div id="dash-criticos"></div>
+    </div>
+
+    <!-- ── EQUIPAMENTOS ── -->
+    <div class="view" id="view-equipamentos">
+      <div class="page-toolbar">
+        <div class="section-title" style="margin:0">❄️ Equipamentos</div>
+        <button class="btn btn--primary btn--sm" onclick="openModal('modal-add-eq')">+ Adicionar</button>
+      </div>
+      <div class="search-bar">
+        <span class="search-bar__icon">🔍</span>
+        <input class="form-control search-bar__input" type="text" placeholder="Buscar equipamento..." oninput="renderEquip(this.value)">
+      </div>
+      <div id="lista-equip"></div>
+    </div>
+
+    <!-- ── NOVO REGISTRO ── -->
+    <div class="view" id="view-registro">
+      <div class="section-title">✏️ Novo Registro</div>
+      <div class="card">
+
+        <div class="form-group">
+          <label class="form-label">Equipamento *</label>
+          <select id="r-equip" class="form-control">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Data e Hora *</label>
+          <input id="r-data" class="form-control" type="datetime-local">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tipo de Serviço *</label>
+          <select id="r-tipo" class="form-control">
+            <option value="">Selecione...</option>
+            <option>Manutenção Preventiva</option>
+            <option>Manutenção Corretiva</option>
+            <option>Limpeza de Filtros</option>
+            <option>Carga de Gás Refrigerante</option>
+            <option>Troca de Compressor</option>
+            <option>Troca de Capacitor</option>
+            <option>Limpeza de Condensador</option>
+            <option>Limpeza de Evaporador</option>
+            <option>Verificação Elétrica</option>
+            <option>Ajuste de Dreno</option>
+            <option>Inspeção Geral</option>
+            <option>Outro</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Peças / Materiais utilizados</label>
+          <input id="r-pecas" class="form-control" type="text" placeholder="Ex: Filtro G4, R-410A 1kg, Capacitor 30µF">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observações / Serviço Realizado *</label>
+          <textarea id="r-obs" class="form-control" placeholder="Descreva o que foi feito, valores medidos, condições encontradas..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Fotos do Serviço</label>
+          <div class="photo-drop">
+            <input type="file" accept="image/*" multiple onchange="Photos.add(this)">
+            <div class="photo-drop__icon">📷</div>
+            <div class="photo-drop__text">Toque para adicionar fotos</div>
+          </div>
+          <div class="photo-grid" id="photo-preview"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Próxima Manutenção Prevista</label>
+            <input id="r-proxima" class="form-control" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status do Equipamento</label>
+            <select id="r-status" class="form-control">
+              <option value="ok">✅ Operando Normal</option>
+              <option value="warn">⚠️ Requer Atenção</option>
+              <option value="danger">🔴 Fora de Operação</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn--outline" onclick="Registro.clear()">Limpar</button>
+          <button class="btn btn--primary" onclick="Registro.save()">💾 Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HISTÓRICO ── -->
+    <div class="view" id="view-historico">
+      <div class="page-toolbar">
+        <div class="section-title" style="margin:0">📋 Histórico</div>
+        <button class="btn btn--outline btn--sm" onclick="goView('relatorio')">📄 Relatório</button>
+      </div>
+      <div class="search-bar">
+        <span class="search-bar__icon">🔍</span>
+        <input class="form-control search-bar__input" id="hist-busca" type="text" placeholder="Buscar no histórico..." oninput="renderHist()">
+      </div>
+      <div class="form-group">
+        <select id="hist-equip" class="form-control" onchange="renderHist()">
+          <option value="">Todos os equipamentos</option>
+        </select>
+      </div>
+      <div id="timeline"></div>
+    </div>
+
+    <!-- ── ALERTAS ── -->
+    <div class="view" id="view-alertas">
+      <div class="section-title">🔔 Alertas</div>
+      <div id="lista-alertas"></div>
+    </div>
+
+    <!-- ── RELATÓRIO ── -->
+    <div class="view" id="view-relatorio">
+      <div class="page-toolbar">
+        <div class="section-title" style="margin:0">📄 Relatório</div>
+        <div class="page-toolbar__actions">
+          <button class="btn btn--outline btn--sm" onclick="goView('historico')">← Voltar</button>
+          <button class="btn btn--primary btn--sm" id="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Equipamento</label>
+        <select id="rel-equip" class="form-control" onchange="renderRelatorio()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">De</label>
+          <input id="rel-de" class="form-control" type="date" onchange="renderRelatorio()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Até</label>
+          <input id="rel-ate" class="form-control" type="date" onchange="renderRelatorio()">
+        </div>
+      </div>
+      <div id="relatorio-corpo"></div>
+    </div>
+
+  </main>
+</div><!-- /#app -->
+
+<!-- Modal: Adicionar Equipamento -->
+<div class="modal-overlay" id="modal-add-eq">
+  <div class="modal">
+    <div class="modal__handle"></div>
+    <div class="modal__title">Novo Equipamento</div>
+
+    <div class="form-group">
+      <label class="form-label">Nome *</label>
+      <input id="eq-nome" class="form-control" type="text" placeholder="Ex: Split UTI Adulto">
+    </div>
+    <div class="form-group">
+      <label class="form-label">TAG / Identificação</label>
+      <input id="eq-tag" class="form-control" type="text" placeholder="Ex: AC-UTI-01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Localização *</label>
+      <input id="eq-local" class="form-control" type="text" placeholder="Ex: UTI Adulto – 2º Andar">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select id="eq-tipo" class="form-control">
+          <option>Split Hi-Wall</option>
+          <option>Split Cassete</option>
+          <option>Split Piso Teto</option>
+          <option>VRF / VRV</option>
+          <option>Chiller</option>
+          <option>Fan Coil</option>
+          <option>Self Contained</option>
+          <option>Roof Top</option>
+          <option>Câmara Fria</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fluido Refrigerante</label>
+        <select id="eq-fluido" class="form-control">
+          <option>R-410A</option>
+          <option>R-22</option>
+          <option>R-32</option>
+          <option>R-407C</option>
+          <option>R-134A</option>
+          <option>Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Marca / Modelo</label>
+      <input id="eq-modelo" class="form-control" type="text" placeholder="Ex: Carrier 18000 BTU">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn--outline" onclick="Modal.close('modal-add-eq')">Cancelar</button>
+      <button class="btn btn--primary" onclick="Equipamentos.save()">✅ Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalhe Equipamento -->
+<div class="modal-overlay" id="modal-eq-det">
+  <div class="modal">
+    <div class="modal__handle"></div>
+    <div id="eq-det-corpo"></div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="Photos.closeLightbox()">
+  <button class="lightbox__close" onclick="Photos.closeLightbox()">✕</button>
+  <img class="lightbox__img" id="lightbox-img" src="" alt="Foto do serviço">
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+'use strict';
+
+/* ─────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────── */
+const STORAGE_KEY = 'cooltrack_v3';
+
+const TIPO_ICON = {
+  'Split Hi-Wall':  '❄️',
+  'Split Cassete':  '🌀',
+  'Split Piso Teto':'📐',
+  'Fan Coil':       '💨',
+  'Chiller':        '🧊',
+  'Câmara Fria':    '🏔️',
+  'VRF / VRV':      '🔁',
+};
+
+const STATUS_LABEL = { ok: 'Normal', warn: 'Atenção', danger: 'Crítico' };
+
+/* ─────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────── */
+const Utils = {
+  uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+  },
+
+  dateOffset(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  },
+
+  datetimeOffset(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 16);
+  },
+
+  nowDatetime() {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  },
+
+  formatDatetime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return (
+      d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+      ' ' +
+      d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    );
+  },
+
+  formatDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  },
+
+  daysDiff(isoDate) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return Math.ceil((new Date(isoDate + 'T00:00:00') - today) / 86_400_000);
+  },
+
+  truncate(str, len) {
+    return str.length > len ? str.slice(0, len) + '...' : str;
+  },
+
+  getEl(id) { return document.getElementById(id); },
+  getVal(id) { return Utils.getEl(id)?.value ?? ''; },
+  setVal(id, v) { const el = Utils.getEl(id); if (el) el.value = v; },
+  clearVals(...ids) { ids.forEach(id => Utils.setVal(id, '')); },
+
+  empty(icon, msg, sub = '') {
+    return `<div class="empty-state">
+      <div class="empty-state__icon">${icon}</div>
+      <div class="empty-state__title">${msg}</div>
+      ${sub ? `<div class="empty-state__sub">${sub}</div>` : ''}
+    </div>`;
+  },
+};
+
+/* ─────────────────────────────────────────
+   STORE  (state + persistence)
+───────────────────────────────────────── */
+const Store = {
+  state: { equipamentos: [], registros: [] },
+
+  load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) this.state = JSON.parse(raw);
+    } catch (_) { /* ignore */ }
+  },
+
+  save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+  },
+
+  get equip() { return this.state.equipamentos; },
+  get regs()  { return this.state.registros; },
+
+  findEquip(id)   { return this.equip.find(e => e.id === id); },
+  regsForEquip(id){ return this.regs.filter(r => r.equipId === id); },
+
+  lastRegForEquip(id) {
+    return this.regsForEquip(id).sort((a, b) => b.data.localeCompare(a.data))[0];
+  },
+
+  seed() {
+    const eq = [
+      { id: Utils.uid(), nome: 'Split UTI Adulto',      tag: 'AC-UTI-01', local: 'UTI Adulto – 2º Andar',      tipo: 'Split Hi-Wall',  modelo: 'Carrier 18000 BTU', fluido: 'R-410A',  status: 'ok'     },
+      { id: Utils.uid(), nome: 'Split Centro Cirúrgico',tag: 'AC-CC-01',  local: 'Centro Cirúrgico – 3º Andar', tipo: 'Split Piso Teto', modelo: 'Trane 24000 BTU',   fluido: 'R-410A',  status: 'warn'   },
+      { id: Utils.uid(), nome: 'Fan Coil Recepção',     tag: 'FC-REC-01', local: 'Recepção – Térreo',           tipo: 'Fan Coil',        modelo: 'Hitachi 36000 BTU', fluido: 'R-22',    status: 'ok'     },
+      { id: Utils.uid(), nome: 'Câmara Fria Farmácia',  tag: 'CF-FAR-01', local: 'Farmácia – Subsolo',          tipo: 'Câmara Fria',     modelo: 'Tecumseh',          fluido: 'R-134A',  status: 'danger' },
+    ];
+    this.state.equipamentos = eq;
+    this.state.registros = [
+      { id: Utils.uid(), equipId: eq[0].id, data: Utils.datetimeOffset(-2),  tipo: 'Manutenção Preventiva',      pecas: 'Filtro G4, lubrificante', obs: 'Limpeza geral, verificação de correntes e tensões. Tudo OK.',                                              proxima: Utils.dateOffset(28), status: 'ok',     fotos: [] },
+      { id: Utils.uid(), equipId: eq[1].id, data: Utils.datetimeOffset(-5),  tipo: 'Carga de Gás Refrigerante',  pecas: 'R-410A 1,5 kg',           obs: 'Baixa eficiência detectada. Vazamento na linha de líquido, reparo e recarga realizada. Monitorar.',         proxima: Utils.dateOffset(10), status: 'warn',   fotos: [] },
+      { id: Utils.uid(), equipId: eq[3].id, data: Utils.datetimeOffset(-1),  tipo: 'Manutenção Corretiva',       pecas: 'Capacitor 35µF',           obs: 'Compressor não ligava. Capacitor queimado substituído. Aguardando verificação de temperatura.',             proxima: Utils.dateOffset(3),  status: 'danger', fotos: [] },
+    ];
+    this.save();
+  },
+};
+
+/* ─────────────────────────────────────────
+   MODAL
+───────────────────────────────────────── */
+const Modal = {
+  open(id)  { Utils.getEl(id).classList.add('is-open'); },
+  close(id) { Utils.getEl(id).classList.remove('is-open'); },
+
+  init() {
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', e => { if (e.target === el) el.classList.remove('is-open'); });
+    });
+  },
+};
+
+/* ─────────────────────────────────────────
+   PHOTOS
+───────────────────────────────────────── */
+const Photos = {
+  pending: [],
+
+  add(input) {
+    Array.from(input.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => { this.pending.push(e.target.result); this.render(); };
+      reader.readAsDataURL(file);
+    });
+    input.value = '';
+  },
+
+  remove(i) {
+    this.pending.splice(i, 1);
+    this.render();
+  },
+
+  render() {
+    Utils.getEl('photo-preview').innerHTML = this.pending.map((src, i) => `
+      <div class="photo-thumb">
+        <img src="${src}" onclick="Photos.openLightbox('${src}')">
+        <button class="photo-thumb__remove" onclick="Photos.remove(${i})">✕</button>
+      </div>`).join('');
+  },
+
+  clear() { this.pending = []; this.render(); },
+
+  openLightbox(src) {
+    Utils.getEl('lightbox-img').src = src;
+    Utils.getEl('lightbox').classList.add('is-open');
+  },
+
+  closeLightbox() { Utils.getEl('lightbox').classList.remove('is-open'); },
+};
+
+/* ─────────────────────────────────────────
+   ALERTS (shared logic)
+───────────────────────────────────────── */
+const Alerts = {
+  /** Returns list of alert objects */
+  getAll() {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const in7   = new Date(today); in7.setDate(in7.getDate() + 7);
+    const list  = [];
+
+    Store.regs.forEach(r => {
+      if (!r.proxima) return;
+      const d = new Date(r.proxima + 'T00:00:00');
+      if (d < today)  list.push({ kind: 'overdue',  reg: r });
+      else if (d <= in7) list.push({ kind: 'upcoming', reg: r });
+    });
+
+    Store.equip.filter(e => e.status === 'danger').forEach(eq => {
+      list.push({ kind: 'critical', eq });
+    });
+
+    return list;
+  },
+
+  /** Builds alert card HTML */
+  cardHtml({ kind, reg, eq }, onclick = "goView('alertas')") {
+    if (kind === 'overdue') {
+      const e   = Store.findEquip(reg.equipId);
+      const ago = Math.abs(Utils.daysDiff(reg.proxima));
+      return `<div class="alert-card alert-card--critical" onclick="${onclick}">
+        <span class="alert-card__icon">🔴</span>
+        <div>
+          <div class="alert-card__title">Manutenção VENCIDA (${ago}d atrás)</div>
+          <div class="alert-card__sub">${reg.tipo}</div>
+          <div class="alert-card__equip">${e?.nome ?? '—'} · ${e?.local ?? ''}</div>
+        </div>
+      </div>`;
+    }
+
+    if (kind === 'upcoming') {
+      const e    = Store.findEquip(reg.equipId);
+      const days = Utils.daysDiff(reg.proxima);
+      return `<div class="alert-card" onclick="${onclick}">
+        <span class="alert-card__icon">⚠️</span>
+        <div>
+          <div class="alert-card__title">Manutenção em ${days} dia(s) — ${Utils.formatDate(reg.proxima)}</div>
+          <div class="alert-card__sub">${reg.tipo}</div>
+          <div class="alert-card__equip">${e?.nome ?? '—'} · ${e?.local ?? ''}</div>
+        </div>
+      </div>`;
+    }
+
+    if (kind === 'critical') {
+      return `<div class="alert-card alert-card--critical" onclick="${onclick}">
+        <span class="alert-card__icon">🚨</span>
+        <div>
+          <div class="alert-card__title">Equipamento fora de operação</div>
+          <div class="alert-card__sub">Requer intervenção imediata</div>
+          <div class="alert-card__equip">${eq.nome} · ${eq.local}</div>
+        </div>
+      </div>`;
+    }
+
+    return '';
+  },
+};
+
+/* ─────────────────────────────────────────
+   HEADER
+───────────────────────────────────────── */
+const Header = {
+  update() {
+    const today  = new Date();
+    const iniMes = new Date(today.getFullYear(), today.getMonth(), 1);
+    const n      = Alerts.getAll().length;
+
+    Utils.getEl('hdr-date').textContent = today
+      .toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
+      .toUpperCase();
+
+    Utils.getEl('hst-total').textContent = Store.equip.length;
+    Utils.getEl('hst-mes').textContent   = Store.regs.filter(r => new Date(r.data) >= iniMes).length;
+    Utils.getEl('hst-alert').textContent = n;
+
+    const badge = Utils.getEl('alerta-badge');
+    badge.textContent = n;
+    badge.classList.toggle('is-visible', n > 0);
+  },
+};
+
+/* ─────────────────────────────────────────
+   SELECTS
+───────────────────────────────────────── */
+function populateSelects() {
+  const opts = Store.equip
+    .map(e => `<option value="${e.id}">${e.nome} — ${e.local}</option>`)
+    .join('');
+
+  const targets = [
+    { id: 'r-equip',    prefix: '<option value="">Selecione...</option>' },
+    { id: 'hist-equip', prefix: '<option value="">Todos os equipamentos</option>' },
+    { id: 'rel-equip',  prefix: '<option value="">Todos</option>' },
+  ];
+
+  targets.forEach(({ id, prefix }) => {
+    const el = Utils.getEl(id);
+    if (el) el.innerHTML = prefix + opts;
+  });
+}
+
+/* ─────────────────────────────────────────
+   TEMPLATES
+───────────────────────────────────────── */
+const Templates = {
+  equipCard(eq) {
+    const icon = TIPO_ICON[eq.tipo] ?? '⚙️';
+    const last = Store.lastRegForEquip(eq.id);
+    const s    = eq.status;
+
+    return `<div class="equip-card equip-card--${s}" onclick="Equipamentos.view('${eq.id}')">
+      <div class="equip-card__icon">${icon}</div>
+      <div class="equip-card__body">
+        <div class="equip-card__name">${eq.nome}</div>
+        <div class="equip-card__local">📍 ${eq.local}</div>
+        <div class="equip-card__tag">${eq.tag || eq.tipo} · ${eq.fluido}</div>
+        ${last ? `<div class="equip-card__last">Últ: ${Utils.formatDatetime(last.data)}</div>` : ''}
+      </div>
+      <span class="badge badge--${s}">${STATUS_LABEL[s]}</span>
+    </div>`;
+  },
+
+  infoRow(label, value) {
+    return `<div class="info-row">
+      <span class="info-row__label">${label}</span>
+      <span class="info-row__value">${value}</span>
+    </div>`;
+  },
+
+  timelineItem(r) {
+    const eq    = Store.findEquip(r.equipId);
+    const dotMod = r.status !== 'ok' ? `timeline__dot--${r.status}` : '';
+    const photos = r.fotos?.length
+      ? `<div class="timeline__photos">
+          ${r.fotos.map(f => `<img class="timeline__photo" src="${f}" onclick="Photos.openLightbox('${f}')" title="Ampliar">`).join('')}
+        </div>`
+      : '';
+
+    return `<div class="timeline__item">
+      <div class="timeline__dot ${dotMod}"></div>
+      <div class="timeline__item-inner">
+        <div class="timeline__item-body">
+          <div class="timeline__date">${Utils.formatDatetime(r.data)}</div>
+          <div class="timeline__title">${r.tipo}</div>
+          <div class="timeline__equip">📍 ${eq?.nome ?? '—'} · ${eq?.local ?? ''}</div>
+          <div class="timeline__obs">${r.obs}</div>
+          ${r.pecas ? `<div class="timeline__parts">🔩 ${r.pecas}</div>` : ''}
+          ${r.proxima ? `<div class="timeline__next">📅 Próxima: ${Utils.formatDate(r.proxima)}</div>` : ''}
+          ${photos}
+        </div>
+        <button class="timeline__delete" onclick="Historico.delete('${r.id}')">🗑️</button>
+      </div>
+    </div>`;
+  },
+
+  reportRecord(r) {
+    const eq     = Store.findEquip(r.equipId);
+    const photos = r.fotos?.length
+      ? `<div class="report-record__photos">
+          <div class="report-record__photos-title">FOTOS (${r.fotos.length})</div>
+          <div class="report-record__photos-grid">
+            ${r.fotos.map(f => `<img class="report-record__photo" src="${f}">`).join('')}
+          </div>
+        </div>`
+      : '';
+
+    return `<div class="card report-record">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700;font-size:14px">${r.tipo}</div>
+          <div style="font-size:11px;font-family:var(--font-mono);color:var(--muted-light)">${Utils.formatDatetime(r.data)}</div>
+        </div>
+        <span class="badge badge--${r.status}">${STATUS_LABEL[r.status]}</span>
+      </div>
+      <div class="info-list">
+        ${Templates.infoRow('Equipamento', eq?.nome ?? '—')}
+        ${Templates.infoRow('TAG', eq?.tag ?? '—')}
+        ${Templates.infoRow('Localização', eq?.local ?? '—')}
+        ${r.pecas ? Templates.infoRow('Peças/Materiais', r.pecas) : ''}
+      </div>
+      <div class="report-record__obs">${r.obs}</div>
+      ${r.proxima ? `<div class="report-next">📅 Próxima: ${Utils.formatDate(r.proxima)}</div>` : ''}
+      ${photos}
+    </div>`;
+  },
+};
+
+/* ─────────────────────────────────────────
+   VIEWS
+───────────────────────────────────────── */
+function goView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('is-active'));
+
+  Utils.getEl('view-' + name).classList.add('active');
+  Utils.getEl('nav-'  + name)?.classList.add('is-active');
+
+  const actions = {
+    inicio:       () => renderInicio(),
+    equipamentos: () => renderEquip(),
+    registro:     () => { populateSelects(); Utils.setVal('r-data', Utils.nowDatetime()); },
+    historico:    () => { populateSelects(); renderHist(); },
+    alertas:      () => renderAlertas(),
+    relatorio:    () => { populateSelects(); renderRelatorio(); },
+  };
+
+  actions[name]?.();
+  Header.update();
+  window.scrollTo(0, 0);
+}
+
+/* ─────────────────────────────────────────
+   INICIO
+───────────────────────────────────────── */
+function renderInicio() {
+  Header.update();
+
+  // Alert previews
+  const alertas = Alerts.getAll().slice(0, 2);
+  Utils.getEl('dash-alertas-mini').innerHTML = alertas
+    .map(a => Alerts.cardHtml(a))
+    .join('');
+
+  // Recent records
+  const recent = [...Store.regs]
+    .sort((a, b) => b.data.localeCompare(a.data))
+    .slice(0, 3);
+
+  Utils.getEl('dash-recentes').innerHTML = recent.length
+    ? recent.map(r => {
+        const eq = Store.findEquip(r.equipId);
+        return `<div class="card" style="cursor:pointer" onclick="goView('historico')">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted-light)">${Utils.formatDatetime(r.data)}</div>
+          <div style="font-weight:700;font-size:14px;margin:3px 0">${r.tipo}</div>
+          <div style="font-size:12px;color:var(--blue);font-weight:600">${eq?.nome ?? '—'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${Utils.truncate(r.obs, 60)}</div>
+        </div>`;
+      }).join('')
+    : Utils.empty('📭', 'Nenhum registro', 'Faça seu primeiro lançamento');
+
+  // Critical equipment
+  const critical = Store.equip.filter(e => e.status !== 'ok');
+  Utils.getEl('dash-criticos').innerHTML = critical.length
+    ? critical.map(Templates.equipCard).join('')
+    : Utils.empty('✅', 'Todos normais');
+}
+
+/* ─────────────────────────────────────────
+   EQUIPAMENTOS
+───────────────────────────────────────── */
+const Equipamentos = {
+  render(filtro = '') {
+    const q    = filtro.toLowerCase();
+    const list = Store.equip.filter(e =>
+      !q || e.nome.toLowerCase().includes(q) || e.local.toLowerCase().includes(q)
+    );
+
+    Utils.getEl('lista-equip').innerHTML = list.length
+      ? list.map(Templates.equipCard).join('')
+      : Utils.empty('🔧', 'Nenhum equipamento');
+  },
+
+  save() {
+    const nome  = Utils.getVal('eq-nome').trim();
+    const local = Utils.getVal('eq-local').trim();
+    if (!nome || !local) { alert('Preencha nome e localização.'); return; }
+
+    Store.equip.push({
+      id:     Utils.uid(),
+      nome, local, status: 'ok',
+      tag:    Utils.getVal('eq-tag'),
+      tipo:   Utils.getVal('eq-tipo'),
+      modelo: Utils.getVal('eq-modelo'),
+      fluido: Utils.getVal('eq-fluido'),
+    });
+
+    Store.save();
+    Modal.close('modal-add-eq');
+    Utils.clearVals('eq-nome', 'eq-tag', 'eq-local', 'eq-modelo');
+    this.render();
+    Header.update();
+  },
+
+  view(id) {
+    const eq   = Store.findEquip(id);
+    if (!eq) return;
+
+    const regs  = Store.regsForEquip(id).sort((a, b) => b.data.localeCompare(a.data));
+    const nextR = regs.find(r => r.proxima && Utils.daysDiff(r.proxima) >= 0);
+
+    Utils.getEl('eq-det-corpo').innerHTML = `
+      <div class="modal__title">${eq.nome}</div>
+      <div class="info-list">
+        ${Templates.infoRow('TAG', eq.tag || '—')}
+        ${Templates.infoRow('Localização', eq.local)}
+        ${Templates.infoRow('Tipo', eq.tipo)}
+        ${Templates.infoRow('Modelo', eq.modelo || '—')}
+        ${Templates.infoRow('Fluido', eq.fluido)}
+        ${Templates.infoRow('Status', `<span class="badge badge--${eq.status}">${STATUS_LABEL[eq.status]}</span>`)}
+        ${nextR ? Templates.infoRow('Próxima Manutenção', `<span style="color:var(--orange)">${Utils.formatDate(nextR.proxima)}</span>`) : ''}
+      </div>
+      <div style="font-weight:700;margin-bottom:8px">${regs.length} registro(s)</div>
+      ${regs.slice(0, 3).map(r => `
+        <div class="card" style="padding:10px 12px;font-size:13px;margin-bottom:8px">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted-light)">${Utils.formatDatetime(r.data)}</div>
+          <div style="font-weight:700">${r.tipo}</div>
+          <div style="color:var(--muted);margin-top:3px">${Utils.truncate(r.obs, 80)}</div>
+        </div>`).join('')}
+      <div class="btn-group">
+        <button class="btn btn--outline"
+          onclick="Modal.close('modal-eq-det');goView('registro');setTimeout(()=>Utils.setVal('r-equip','${id}'),50)">
+          + Registrar
+        </button>
+        <button class="btn btn--danger"
+          onclick="if(confirm('Excluir equipamento e todos os seus registros?')){Equipamentos.delete('${id}')}">
+          🗑️ Excluir
+        </button>
+      </div>
+      <button class="btn btn--outline" style="margin-top:8px" onclick="Modal.close('modal-eq-det')">Fechar</button>
+    `;
+
+    Modal.open('modal-eq-det');
+  },
+
+  delete(id) {
+    Store.state.equipamentos = Store.equip.filter(e => e.id !== id);
+    Store.state.registros    = Store.regs.filter(r => r.equipId !== id);
+    Store.save();
+    Modal.close('modal-eq-det');
+    this.render();
+    Header.update();
+  },
+};
+
+function renderEquip(filtro = '') { Equipamentos.render(filtro); }
+
+/* ─────────────────────────────────────────
+   REGISTRO
+───────────────────────────────────────── */
+const Registro = {
+  save() {
+    const equipId = Utils.getVal('r-equip');
+    const data    = Utils.getVal('r-data');
+    const tipo    = Utils.getVal('r-tipo');
+    const obs     = Utils.getVal('r-obs').trim();
+
+    if (!equipId || !data || !tipo || !obs) {
+      alert('Preencha os campos obrigatórios (*).');
+      return;
+    }
+
+    const status = Utils.getVal('r-status');
+    Store.regs.push({
+      id: Utils.uid(), equipId, data, tipo, obs, status,
+      pecas:   Utils.getVal('r-pecas'),
+      proxima: Utils.getVal('r-proxima'),
+      fotos:   [...Photos.pending],
+    });
+
+    const eq = Store.findEquip(equipId);
+    if (eq) eq.status = status;
+
+    Store.save();
+    this.clear();
+    alert('✅ Registro salvo!');
+    goView('historico');
+  },
+
+  clear() {
+    Utils.clearVals('r-equip', 'r-tipo', 'r-pecas', 'r-obs', 'r-proxima');
+    Utils.setVal('r-status', 'ok');
+    Utils.setVal('r-data', Utils.nowDatetime());
+    Photos.clear();
+  },
+};
+
+/* ─────────────────────────────────────────
+   HISTÓRICO
+───────────────────────────────────────── */
+const Historico = {
+  render() {
+    const busca  = Utils.getVal('hist-busca').toLowerCase();
+    const filtEq = Utils.getVal('hist-equip');
+
+    let list = [...Store.regs].sort((a, b) => b.data.localeCompare(a.data));
+
+    if (filtEq) list = list.filter(r => r.equipId === filtEq);
+    if (busca)  list = list.filter(r => {
+      const eq = Store.findEquip(r.equipId);
+      return (
+        r.obs.toLowerCase().includes(busca) ||
+        r.tipo.toLowerCase().includes(busca) ||
+        eq?.nome.toLowerCase().includes(busca)
+      );
+    });
+
+    Utils.getEl('timeline').innerHTML = list.length
+      ? `<div class="timeline">${list.map(Templates.timelineItem).join('')}</div>`
+      : Utils.empty('📭', 'Nenhum registro');
+  },
+
+  delete(id) {
+    Store.state.registros = Store.regs.filter(r => r.id !== id);
+    Store.save();
+    this.render();
+    Header.update();
+  },
+};
+
+function renderHist() { Historico.render(); }
+
+/* ─────────────────────────────────────────
+   ALERTAS
+───────────────────────────────────────── */
+function renderAlertas() {
+  const list = Alerts.getAll();
+  Utils.getEl('lista-alertas').innerHTML = list.length
+    ? list.map(a => Alerts.cardHtml(a, '')).join('')
+    : Utils.empty('✅', 'Tudo em dia!', 'Nenhuma manutenção pendente');
+}
+
+/* ─────────────────────────────────────────
+   RELATÓRIO
+───────────────────────────────────────── */
+function renderRelatorio() {
+  const filtEq = Utils.getVal('rel-equip');
+  const de     = Utils.getVal('rel-de');
+  const ate    = Utils.getVal('rel-ate');
+
+  let list = [...Store.regs].sort((a, b) => b.data.localeCompare(a.data));
+  if (filtEq) list = list.filter(r => r.equipId === filtEq);
+  if (de)     list = list.filter(r => r.data >= de);
+  if (ate)    list = list.filter(r => r.data <= ate + 'T23:59');
+
+  const el = Utils.getEl('relatorio-corpo');
+
+  if (!list.length) {
+    el.innerHTML = Utils.empty('📭', 'Sem registros no período');
+    return;
+  }
+
+  const today = new Date().toLocaleDateString('pt-BR');
+  el.innerHTML = `
+    <div class="card">
+      <div class="report-header">RELATÓRIO DE MANUTENÇÃO</div>
+      <div class="report-meta">🏥 Hospital · Gerado em ${today} · ${list.length} registro(s)</div>
+    </div>
+    ${list.map(Templates.reportRecord).join('')}
+  `;
+}
+
+/* ─────────────────────────────────────────
+   BOOTSTRAP
+───────────────────────────────────────── */
+Store.load();
+if (!Store.equip.length) Store.seed();
+
+Modal.init();
+Header.update();
+renderInicio();
+</script>
+</body>
+</html>
