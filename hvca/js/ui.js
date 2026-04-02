@@ -55,15 +55,21 @@ export const Alerts = {
     const { registros, equipamentos } = getState();
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
-    const list = [];
+    const dueByEquip = new Map();
 
     registros.forEach(r => {
       if (!r.proxima) return;
       const d = new Date(`${r.proxima}T00:00:00`);
-      if (d < today) list.push({ kind: 'overdue', reg: r });
-      else if (d <= in7) list.push({ kind: 'upcoming', reg: r });
+      if (Number.isNaN(d.getTime())) return;
+      const current = dueByEquip.get(r.equipId);
+      if (!current || d < current.date) dueByEquip.set(r.equipId, { date: d, reg: r });
     });
 
+    const list = [];
+    dueByEquip.forEach(({ date, reg }) => {
+      if (date < today) list.push({ kind: 'overdue', reg });
+      else if (date <= in7) list.push({ kind: 'upcoming', reg });
+    });
     equipamentos.filter(e => e.status === 'danger').forEach(eq => list.push({ kind: 'critical', eq }));
     return list;
   },
@@ -223,13 +229,20 @@ export const Equipamentos = {
     const nome = Utils.getVal('eq-nome').trim();
     const local = Utils.getVal('eq-local').trim();
     if (!nome || !local) { alert('Preencha nome e localização.'); return; }
+    const rawTag = Utils.getVal('eq-tag').trim();
+    const normalizedTag = rawTag.toUpperCase();
+    const { equipamentos } = getState();
+    if (normalizedTag && equipamentos.some(e => (e.tag || '').toUpperCase() === normalizedTag)) {
+      alert('Já existe equipamento com esta TAG.');
+      return;
+    }
 
     setState(prev => ({
       ...prev,
       equipamentos: [...prev.equipamentos, {
         id: Utils.uid(), nome, local, status: 'ok',
-        tag: Utils.getVal('eq-tag'), tipo: Utils.getVal('eq-tipo'),
-        modelo: Utils.getVal('eq-modelo'), fluido: Utils.getVal('eq-fluido'),
+        tag: normalizedTag, tipo: Utils.getVal('eq-tipo'),
+        modelo: Utils.getVal('eq-modelo').trim(), fluido: Utils.getVal('eq-fluido'),
       }],
     }));
 
@@ -268,13 +281,19 @@ export const Registro = {
     const tipo = Utils.getVal('r-tipo');
     const obs = Utils.getVal('r-obs').trim();
     if (!equipId || !data || !tipo || !obs) { alert('Preencha os campos obrigatórios (*).'); return; }
+    if (obs.length < 10) { alert('Descreva o serviço com mais detalhes (mín. 10 caracteres).'); return; }
+    const proxima = Utils.getVal('r-proxima');
+    if (proxima && proxima < data.slice(0, 10)) {
+      alert('A próxima manutenção não pode ser anterior à data do serviço.');
+      return;
+    }
 
     const status = Utils.getVal('r-status');
     setState(prev => ({
       ...prev,
       registros: [...prev.registros, {
         id: Utils.uid(), equipId, data, tipo, obs, status,
-        pecas: Utils.getVal('r-pecas'), proxima: Utils.getVal('r-proxima'), fotos: [...Photos.pending],
+        pecas: Utils.getVal('r-pecas').trim(), proxima, fotos: [...Photos.pending],
       }],
       equipamentos: prev.equipamentos.map(e => e.id === equipId ? { ...e, status } : e),
     }));
@@ -293,7 +312,18 @@ export const Registro = {
 
 export const Historico = {
   delete(id) {
-    setState(prev => ({ ...prev, registros: prev.registros.filter(r => r.id !== id) }));
+    setState(prev => {
+      const regToDelete = prev.registros.find(r => r.id === id);
+      const registros = prev.registros.filter(r => r.id !== id);
+      if (!regToDelete) return { ...prev, registros };
+      const lastRemaining = registros
+        .filter(r => r.equipId === regToDelete.equipId)
+        .sort((a, b) => b.data.localeCompare(a.data))[0];
+      const equipamentos = prev.equipamentos.map(eq => (
+        eq.id === regToDelete.equipId ? { ...eq, status: lastRemaining?.status || 'ok' } : eq
+      ));
+      return { ...prev, registros, equipamentos };
+    });
     renderHist();
     updateHeader();
   },
