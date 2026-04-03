@@ -141,16 +141,16 @@ export function renderInicio() {
   const recent = [...registros].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 3);
   Utils.getEl('dash-recentes').innerHTML = recent.length ? recent.map(r => {
     const eq = findEquip(r.equipId);
-    return `<div class="card" style="cursor:pointer" onclick="goView('historico')">
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted-light)">${Utils.formatDatetime(r.data)}</div>
-      <div style="font-weight:700;font-size:14px;margin:3px 0">${Utils.escapeHtml(r.tipo)}</div>
-      <div style="font-size:12px;color:var(--blue);font-weight:600">${Utils.escapeHtml(eq?.nome ?? '—')}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:3px">${Utils.escapeHtml(Utils.truncate(r.obs, 60))}</div>
-    </div>`;
+    return `<article class="card recent-card" onclick="goView('historico')">
+      <div class="recent-card__date">${Utils.formatDatetime(r.data)}</div>
+      <div class="recent-card__title">${Utils.escapeHtml(r.tipo)}</div>
+      <div class="recent-card__equip">${Utils.escapeHtml(eq?.nome ?? '—')}</div>
+      <div class="recent-card__obs">${Utils.escapeHtml(Utils.truncate(r.obs, 60))}</div>
+    </article>`;
   }).join('') : empty('📭', 'Nenhum registro', 'Faça seu primeiro lançamento');
 
   const critical = equipamentos.filter(e => e.status !== 'ok');
-  Utils.getEl('dash-criticos').innerHTML = critical.length ? critical.map(eq => `<div>${renderEquipCard(eq)}</div>`).join('') : empty('✅', 'Todos normais');
+  Utils.getEl('dash-criticos').innerHTML = critical.length ? critical.map(eq => renderEquipCard(eq)).join('') : empty('✅', 'Todos normais');
 }
 
 function renderEquipCard(eq) {
@@ -221,7 +221,7 @@ export function renderRelatorio() {
 
 function reportRecord(r) {
   const eq = findEquip(r.equipId);
-  return `<div class="card report-record"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-weight:700;font-size:14px">${Utils.escapeHtml(r.tipo)}</div><div style="font-size:11px;font-family:var(--font-mono);color:var(--muted-light)">${Utils.formatDatetime(r.data)}</div></div><span class="badge badge--${r.status}">${STATUS_LABEL[r.status]}</span></div><div class="info-list"><div class="info-row"><span class="info-row__label">Equipamento</span><span class="info-row__value">${Utils.escapeHtml(eq?.nome ?? '—')}</span></div><div class="info-row"><span class="info-row__label">TAG</span><span class="info-row__value">${Utils.escapeHtml(eq?.tag ?? '—')}</span></div></div><div class="report-record__obs">${Utils.escapeHtml(r.obs)}</div></div>`;
+  return `<div class="card report-record"><div class="report-record__head"><div><div class="report-record__title">${Utils.escapeHtml(r.tipo)}</div><div class="report-record__date">${Utils.formatDatetime(r.data)}</div></div><span class="badge badge--${r.status}">${STATUS_LABEL[r.status]}</span></div><div class="info-list"><div class="info-row"><span class="info-row__label">Equipamento</span><span class="info-row__value">${Utils.escapeHtml(eq?.nome ?? '—')}</span></div><div class="info-row"><span class="info-row__label">TAG</span><span class="info-row__value">${Utils.escapeHtml(eq?.tag ?? '—')}</span></div></div><div class="report-record__obs">${Utils.escapeHtml(r.obs)}</div></div>`;
 }
 
 export const Equipamentos = {
@@ -259,7 +259,7 @@ export const Equipamentos = {
     Utils.getEl('eq-det-corpo').innerHTML = `<div class="modal__title">${Utils.escapeHtml(eq.nome)}</div>
       <div class="btn-group"><button class="btn btn--outline" onclick="Modal.close('modal-eq-det');goView('registro');setTimeout(()=>Utils.setVal('r-equip','${id}'),50)">+ Registrar</button>
       <button class="btn btn--danger" onclick="if(confirm('Excluir equipamento e todos os seus registros?')){Equipamentos.delete('${id}')}">🗑️ Excluir</button></div>
-      <div style="font-weight:700;margin:8px 0">${regs.length} registro(s)</div>${regs.slice(0, 3).map(r => `<div class='card' style='padding:10px 12px'>${Utils.escapeHtml(r.tipo)} · ${Utils.formatDatetime(r.data)}</div>`).join('')}`;
+      <div class="eq-modal-summary">${regs.length} registro(s)</div>${regs.slice(0, 3).map(r => `<div class='eq-modal-quick'>${Utils.escapeHtml(r.tipo)} · ${Utils.formatDatetime(r.data)}</div>`).join('')}`;
     Modal.open('modal-eq-det');
   },
   delete(id) {
